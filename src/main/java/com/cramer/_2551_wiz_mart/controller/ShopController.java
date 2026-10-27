@@ -225,6 +225,19 @@ public class ShopController {
         shopService.clearCart();
     }
 
+    @FXML
+    private void handleImport(){
+        // TODO
+        showMessage("Import", "Import Button was clicked");
+    }
+
+    @FXML
+    private void handleExport(){
+        // TODO
+        showMessage("Export", "Export Button was clicked");
+    }
+
+
     private void showMessage(String title, String message) {
 
         Label messageLabel = new Label(message);

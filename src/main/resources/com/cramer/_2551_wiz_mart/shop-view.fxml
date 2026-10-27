@@ -80,6 +80,12 @@
             </HBox>
 
             <Button maxWidth="Infinity" onAction="#handleCheckout" text="Place Order" />
+         <HBox alignment="CENTER" prefHeight="17.0" prefWidth="254.0" spacing="10.0">
+            <children>
+               <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#handleImport" text="Import Cart ..." HBox.hgrow="ALWAYS" />
+               <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#handleExport" text="Export Cart ..." HBox.hgrow="ALWAYS" />
+            </children>
+         </HBox>
         </VBox>
     </right>
 
