@@ -1,9 +1,6 @@
 package com.cramer._2551_wiz_mart.controller;
 
-import com.cramer._2551_wiz_mart.model.CartItem;
-import com.cramer._2551_wiz_mart.model.Category;
-import com.cramer._2551_wiz_mart.model.Product;
-import com.cramer._2551_wiz_mart.model.SortOption;
+import com.cramer._2551_wiz_mart.model.*;
 import com.cramer._2551_wiz_mart.service.ShopService;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
@@ -230,10 +227,25 @@ public class ShopController {
 
     private void showMessage(String title, String message) {
 
+        Label messageLabel = new Label(message);
+        messageLabel.setWrapText(true);
+
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle(title);
         alert.setHeaderText(null);
-        alert.setContentText(message);
+        alert.getDialogPane().setContent(messageLabel);
+        alert.showAndWait();
+    }
+
+    private void showError(String title, String message) {
+
+        Label messageLabel = new Label(message);
+        messageLabel.setWrapText(true);
+
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.getDialogPane().setContent(messageLabel);
         alert.showAndWait();
     }
 

@@ -3,18 +3,18 @@ package com.cramer._2551_wiz_mart.service;
 import com.cramer._2551_wiz_mart.data.ProductData;
 import com.cramer._2551_wiz_mart.model.Product;
 import com.cramer._2551_wiz_mart.model.ShoppingCart;
-import com.cramer._2551_wiz_mart.repository.Repository;
+import com.cramer._2551_wiz_mart.repository.ProductRepository;
 
 
 import java.util.List;
 
 public class ShopService {
 
-    private Repository<Product> products;
+    private ProductRepository products;
     private ShoppingCart cart;
 
     public ShopService() {
-        products = new Repository<>();
+        products = new ProductRepository();
         for (Product product : ProductData.createProducts()){
             products.add(product);
         }

@@ -6,7 +6,8 @@ module com.cramer._2551_wiz_mart {
     requires org.kordamp.bootstrapfx.core;
 
     opens com.cramer._2551_wiz_mart to javafx.fxml;
+    opens com.cramer._2551_wiz_mart.controller to javafx.fxml;
+
     exports com.cramer._2551_wiz_mart;
     exports com.cramer._2551_wiz_mart.controller;
-    opens com.cramer._2551_wiz_mart.controller to javafx.fxml;
 }
