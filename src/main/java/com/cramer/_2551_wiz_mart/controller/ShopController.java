@@ -1,16 +1,18 @@
 package com.cramer._2551_wiz_mart.controller;
 
-import com.cramer._2551_wiz_mart.model.CartItem;
-import com.cramer._2551_wiz_mart.model.Category;
-import com.cramer._2551_wiz_mart.model.Product;
-import com.cramer._2551_wiz_mart.model.SortOption;
+import com.cramer._2551_wiz_mart.model.*;
+import com.cramer._2551_wiz_mart.service.CartCsvService;
+import com.cramer._2551_wiz_mart.service.CartJsonService;
 import com.cramer._2551_wiz_mart.service.ShopService;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.scene.control.*;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.VBox;
+import javafx.stage.FileChooser;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -40,11 +42,16 @@ public class ShopController {
     private ComboBox<SortOption> sortComboBox;
 
     private ShopService shopService;
+    private CartCsvService cartCsvService;
+    private CartJsonService cartJsonService;
 
     @FXML
     public void initialize() {
         shopService = new ShopService();
         shopService.getCart().addObserver(() -> updateCartView());
+
+        cartCsvService = new CartCsvService();
+        cartJsonService = new CartJsonService();
 
         setupCategories();
         setupSorting();
@@ -228,12 +235,97 @@ public class ShopController {
         shopService.clearCart();
     }
 
+    @FXML
+    private void handleImport(){
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Import Cart from ...");
+
+        FileChooser.ExtensionFilter cartFilter = new FileChooser.ExtensionFilter("Cart Files", "*.csv", "*.json");
+        fileChooser.getExtensionFilters().add(cartFilter);
+
+        File file = fileChooser.showOpenDialog(productPane.getScene().getWindow());
+
+        // Abbruch der Methode, falls Benutzer Import abbricht:
+        if (file == null){
+            return;
+        }
+
+        try{
+            List<CartEntryData> entries;
+            String fileName = file.getName().toLowerCase();
+
+            if (fileName.endsWith(".csv")) {
+                entries = cartCsvService.importCart(file);
+            } else if (fileName.endsWith(".json")) {
+                entries = cartJsonService.importCart(file);
+            } else {
+                throw new IOException("Invalid import file type: " + fileName);
+            }
+
+            shopService.clearCart();
+            shopService.importCartEntries(entries);
+            showMessage("Import finished", "Imported " + shopService.getCart().getItems().size() + " items into your Cart.");
+
+        } catch (IOException e){
+            showError("Import failed", "Error while importing Cart: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    @FXML
+    private void handleExport(){
+        FileChooser fileChooser = new FileChooser();
+
+        fileChooser.setTitle("Export Cart ...");
+        fileChooser.setInitialFileName("cart.csv");
+
+        FileChooser.ExtensionFilter csvFilter = new FileChooser.ExtensionFilter("CSV Files", "*.csv");
+        FileChooser.ExtensionFilter jsonFilter = new FileChooser.ExtensionFilter("JSON Files", "*.json");
+        fileChooser.getExtensionFilters().addAll(csvFilter, jsonFilter);
+
+        File file = fileChooser.showSaveDialog(productPane.getScene().getWindow());
+
+        // Abbruch der Methode, falls Benutzer Export abbricht:
+        if (file == null) {
+            return;
+        }
+
+        List<CartEntryData> entries = shopService.getCartEntryData();
+
+        try {
+            if (fileChooser.getSelectedExtensionFilter() == jsonFilter){
+                cartJsonService.exportCart(entries, file);
+            } else {
+                cartCsvService.exportCart(entries, file);
+            }
+            showMessage("Export finished", "Cart was exported to: " + file.toPath());
+        } catch (IOException e) {
+            showError("Export failed", "Error while exporting Cart: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
     private void showMessage(String title, String message) {
+
+        Label messageLabel = new Label(message);
+        messageLabel.setWrapText(true);
 
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle(title);
         alert.setHeaderText(null);
-        alert.setContentText(message);
+        alert.getDialogPane().setContent(messageLabel);
+        alert.showAndWait();
+    }
+
+    private void showError(String title, String message) {
+
+        Label messageLabel = new Label(message);
+        messageLabel.setWrapText(true);
+
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.getDialogPane().setContent(messageLabel);
         alert.showAndWait();
     }
 
