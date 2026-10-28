@@ -112,10 +112,10 @@ Bevor der Inhalt in eine CSV-Datei geschrieben wird, soll der User jedoch den Sp
 Der `Controller` wird mit `handleExport()` den Export des Warenkorbs anstoßen. In dieser Methode soll der Reihe nach Folgendes geschehen:
 1. Sie zeigt dem User in der GUI einen `FileChooser` zur Auswahl der Zieldatei an und weist seine Auswahl einer Variable zu.
 2. Sie wandelt den Warenkorb mithilfe der neuen Service-Methode `getCartEntryData()` in eine Liste aus Records um.
-3. Sie stößt den Export in eine CSV-Datei an
-4. Sie zeigt dem Nutzer eine Nachricht über Erfolg oder Misserfolg des Exports an.
+3. Sie stößt den Export in eine CSV-Datei an. (Aufgabe 4)
+4. Sie zeigt dem Nutzer eine Nachricht über Erfolg oder Misserfolg des Exports an. (Aufgabe 4)
 
-Folgendes Code-Snippet zeigt (ohne Imports), wie mit JavaFX ein Datei-Dialog umgesetzt wird:
+Folgendes Code-Snippet zeigt (ohne Imports), wie mit JavaFX ein Dialog zur Auswahl einer txt-Datei umgesetzt wird:
 ```java
 FileChooser fileChooser = new FileChooser();
 
@@ -138,23 +138,120 @@ Die schlussendliche Auswahl des Users ist ein Objekt vom Typ `File`. Bricht der 
 `public void exportCart(List<CartEntryData> entries, File file) throws IOException `
   * Lassen Sie den Methodenkörper zunächst leer (Inhalt folgt in der nächsten Aufgabe)
   * Rufen Sie diese Methode in der Controller-Methode auf, um die Umsetzung von Schritt 3 zu starten. 
-Welche Kontrollstruktur benötigen Sie, um diese Methode aufrufen zu können? Schreiben Sie zunächst eine Art Platzhalter-Umsetzung, die Sie später noch verfeinern.
+Was benötigen Sie, um diese Methode aufrufen zu können? Schreiben Sie zunächst eine Art Platzhalter-Umsetzung, die Sie später noch verfeinern.
 
 ### Tipps
 * Die Methode `handleExport()` wird verhältnismäßig groß werden -- lassen Sie sich davon nicht abschrecken. Versehen Sie Ihren Code zur Hilfe mit Kommentaren.
 * Das Code-Snippet arbeitet mit txt-Dateien. Sie müssen einige Stellen zu csv anpassen.
 * Den Abbruch-Fall durch den User können Sie mit einem einfachen `if (file == null)` prüfen.
-* Um die gegebene Methode aus der neu angelegten Service-Klasse aufrufen zu können, benötigen Sie einen `try-catch`-Block.
+* Um die gegebene Methode aus der neu angelegten Service-Klasse aufrufen zu können, benötigen Sie:
+  * eine Instanz der Klasse `CartCsvService`. Orientieren Sie sich dazu an der Instanziierung von `ShopService` 
+  * einen `try-catch`-Block beim Aufruf der Methode
 
 ---
 
 ## Aufgabe 4 - In eine CSV-Datei schreiben
 
-Wir entscheiden uns hier bewusst gegen einen vorgefertigten CSV-Parser, sondern schreiben die CSV-Datei mit purem Java selbst.
+Im Rahmen der letzten Aufgabe haben Sie die neue Klasse `CartCsvService` mit der Methode `exportCart()` aufgerufen, die jedoch noch keinen Inhalt hat.
+Das soll nun geändert werden. In dieser Methode soll die tatsächliche CSV-Datei mit Inhalt befüllt werden.
+
+Zum Schreiben von CSV-Dateien existieren vorgefertigte CSV-Parser, die das Verarbeiten der Datei vereinfachen. 
+Wir entscheiden uns hier bewusst gegen einen Parser, sondern schreiben die CSV-Datei mit purem Java selbst.
+Hierzu steht uns die Java-Library `Files` zur Verfügung, mit der wir Dateien lesend und schreibend öffnen können.
+
+Folgendes Code-Snippet schreibt eine Menge an Textzeilen (`List<String> lines`) in eine Datei (`File file`):
+```java
+import java.nio.file.Files;
+
+Files.write(file.toPath(), lines);
+```
+
+### Anforderungen
+* Schreiben Sie den Methodenkörper der Methode `exportCart(List<CartEntryData> entries, File file)` in der Klasse `CartCsvService`. Die Methode tut Folgendes:
+  1. Sie erstellt einen String, der den CSV-Header enthält (dieser darf hardgecoded sein)
+  2. Sie erstellt pro Eintrag in `entries` einen String, der CSV-konform ist (Kommas als Seperator) und zum CSV-Header passt
+  3. Sie schreibt alle erstellten Strings in die gegebene Datei `file`
+* Überprüfen Sie den Aufruf der Methode in der Controller-Methode `handleExport()`. Setzen Sie nun den letzten Schritt von `handleExport()` um:
+Sie zeigt dem Nutzer eine Nachricht über Erfolg oder Misserfolg des Exports an:
+  * Bei Misserfolg soll dem Benutzer der Fehler angezeigt werden.
+  * Überlegen Sie sich hierzu, wann der Misserfolg eintritt. Die nötige Kontrollstruktur haben Sie schon in der vorherigen Aufgabe geschrieben.
+  * Die Anzeige soll mithilfe von Alert-Fenstern erfolgen. Hierfür stehen Ihnen bereits Methoden im Controller zur Verfügung!
+* Am Ende dieser Aufgabe soll ein vollständiger Export in eine CSV-Datei möglich sein.
+
+### Tipps
+* Zum Erstellen der CSV-Textzeilen brauchen Sie bloß über ihre Records zu iterieren. 
+Behalten Sie die Reihenfolge der Einträge im Blick -- die Reihenfolge muss der im Header entsprechen!
+* Wenn Sie Ihre Variablen entsprechend benennen, können Sie das Code-Snippet direkt in Ihre Methode aufnehmen.
+* Der Misserfolg in `handleExport()` tritt bei einer `IOException` auf. Sie können diese Exception `catch`en und ihren Inhalt mit `.getMessage()` erhalten.
+* Mit den vorhandenen Methoden `showMessage()` und `showError()` können Sie verschiedene Nachrichtentypen auf der GUI als Alert anzeigen lassen.
 
 ---
 
 ## Aufgabe 5 - Import mit CSV-Parser und Warenkorb-Wiederherstellung
+
+Nach dem Export beschäftigen wir uns nun mit dem Import aus einer CSV-Datei. 
+Hierfür müssen wir eine CSV-Datei lesen, was im Verhältnis zum Schreiben deutlich komplizierter ist.
+
+Mögliche Fehlerquellen sind u.A.:
+* Die Datei entspricht nicht dem gewünschten Format CSV
+* Die CSV-Datei benutzt ein anderes Trennzeichen als erwartet
+* Die Einträge enthalten ein Komma, das nicht als Trennzeichen fungiert
+* Die Datei enthält leere Zeilen
+
+Ein dedizierter CSV-Parser würde für uns einige dieser Probleme lösen, wir bleiben jedoch beim puren Java.
+Der Einfachheit halber ignorieren wir die meisten dieser potenziellen Fehlerquellen und geben sie im Zweifelsfall an den Benutzer als Alert durch.
+
+Am Ende dieser Aufgabe soll es dem Benutzer möglich sein, einen Warenkorb aus einer CSV-Datei zu importieren.
+Der existierende Warenkorb soll dabei komplett **überschrieben** werden, d.h. sie müssen nicht alte Daten mit neuen zusammenführen.
+
+Folgendes Code-Snippet liest eine Datei `file` ein und speichert ihren Inhalt zeilenweise. 
+Anschließend splittet sie die erste Zeile an den Kommas und speichert die Teile in einem String-Array:
+```java
+List<String> lines = Files.readAllLines(file.toPath());
+String[] headerParts = lines[0].split(",");
+```
+
+### Anforderungen
+* Implementieren Sie die Methode `importCart(File file)` in der Klasse `CartCsvService`:
+  1. Diese Methode hat den Rückgabetyp `List<CartEntryData>` und kann eine `IOException` verursachen. 
+Passen Sie den Methodenkopf entsprechend an.
+  2. Sie liest die gegebene Datei zeilenweise ein und erstellt aus jeder Zeile (außer dem Header!) mithilfe einer Schleife eine Instanz der Klasse `CartEntryData`.
+  3. Hierzu wird jede Zeile mit `.split(",")` in ihre Bestandteile aufgesplittet, die dann als Input für die einzelnen Record-Attribute dienen. 
+Achten Sie auch hier auf die Reihenfolge der Felder in der CSV-Datei!
+  3. Am Ende wird eine Liste der erstellten Records zurückgegeben.
+  4. Es wird **keine** Überprüfung auf ungültige Kommas/Trennzeichen, leere Zeilen, oä. durchgeführt!
+* Implementieren Sie die Methode `handleImport()` in der Klasse `ShopController`:
+  1. Diese Methode ist sehr ähnlich zu `handleExport()`: Sie verwendet auch einen `FileChooser`, um den Nutzer eine Quelldatei auswählen zu lassen.
+Die Methode `showSaveDialog()` ist hier aber vermutlich nicht die richtige Wahl ...
+  2. Anschließend ruft sie die neue CartCsvService-Methode `importCart()` mit der vom User festgelegten Datei auf
+  3. Die so erstellte Liste aus Records `List<CartEntryData>` muss nun in den Warenkorb importiert werden. 
+Versuchen Sie sich dazu entweder selbst an einer `ShopService`-Methode `importCartEntries()` (deutlich schwieriger) oder übernehmen Sie sie aus den Tipps und platzieren Sie sie im `ShopService` (einfacher).
+  4. Rufen Sie die erstellte Methode in `handleImport()` auf, um Ihren Warenkorb mit den Einträgen zu befüllen. 
+Denken Sie daran, den Warenkorb vorher zu leeren!
+  5. Am Ende soll auch wieder eine (Miss)erfolgs-Meldung ausgegeben werden.
+* Am Ende dieser Aufgabe ist der User in der Lage, den Warenkorb aus einer CSV-Datei zu importieren.
+
+### Tipps
+* Um beim Lesen der CSV-Zeilen die erste Zeile zu überspringen, können Sie den Zähler Ihrer for-Schleife bei 1 starten lassen.
+* Die einzelnen Teile einer gesplitteten Zeile sind vom Datentyp `String`. 
+Mit `Integer.parseInt(s)` können Sie einen `String s` in ein `int` umwandeln. 
+* Die `ShopService`-Methode `importCartEntries()` sieht folgendermaßen aus:
+```java
+public void importCartEntries(List<CartEntryData> entries){
+  for (CartEntryData entry : entries){
+    Optional<Product> product = products.findById(entry.id());
+    if (product.isPresent()){
+      for (int i=0; i < entry.quantity(); i++){
+        cart.addProduct(product.get());
+      }
+    }
+  }
+}
+```
+* Den Großteil der Methode `handleImport()` können Sie aus `handleExport()` mit nur sehr kleinen Anpassungen übernehmen. 
+Dazu gehören der Aufbau des FileChooser, das Prüfen auf eine fehlende Datei und das Exception Handling!
+* Verwenden Sie beim FileChooser zum Öffnen einer Datei statt `showSaveDialog()` die Methode `showOpenDialog()` mit demselben Argument.
+* Der `ShopService` bietet die Methode `clearCart()` an, die den Warenkorb komplett leert.
 
 ---
 
