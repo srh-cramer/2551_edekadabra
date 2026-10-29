@@ -298,7 +298,7 @@ exports com.cramer._2551_wiz_mart.model;
 
 ## Aufgabe 7 - Export mit Jackson
 
-Wieder wollen wir uns zunächst mit dem Export des Warenkorbs beschäftigen.
+Wieder wollen wir uns zunächst mit dem Export des Warenkorbs zu JSON beschäftigen.
 
 Viele Voraussetzungen haben wir dafür im Rahmen des CSV-Exports schon umgesetzt.
 Wir können z.B. weiterhin den Record `CartEntryData` und die die damit verbundenen Methoden `getCartEntryData()` und `importCartEntries()` im `ShopService` nutzen.
@@ -306,17 +306,76 @@ Wir können z.B. weiterhin den Record `CartEntryData` und die die damit verbunde
 Zur klaren Trennung wird der JSON-Export in einer eigenen Service-Klasse `CartJsonService` umgesetzt, die noch nicht existiert.
 Auch diese Klasse wird die Methoden `exportCart()` und `importCart()` bekommen.
 
-In dieser Aufgabe beschäftigen wir uns mit `exportCart()`. Diese Methode wird sehr überschaubar bleiben.
-Folgendes Code-Snippet zeigt, wie man mit Jackson eine 
+In dieser Aufgabe beschäftigen wir uns mit `exportCart()`. Diese Methode wird sehr überschaubar bleiben:
+Jackson ist in der Lage, Records automatisch zu serialisieren und erspart uns damit viel Schreibarbeit.
 
-Anpassungen sind in der Controller-Klasse `handleExport()` nötig, da diese momentan pauschal den CSV-Export anstößt.
+Folgendes Code-Snippet zeigt, wie man mit Jackson eine Liste aus Objekten `List<Object> entries` in eine Datei `File file` schreibt:
+```java
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+ObjectMapper mapper = new ObjectMapper();
+mapper.writerWithDefaultPrettyPrinter().writeValue(file, entries);
+```
+
+Anschließend sind Anpassungen in der Controller-Klasse `handleExport()` nötig, da diese momentan pauschal den CSV-Export anstößt.
 Hier muss eine Prüfung eingebaut werden, zu welchem Dateityp exportiert werden soll, damit anschließend die entsprechende `exportCart()`-Methode ausgefürt wird.
 
 
 ### Anforderungen
 * Ergänzen Sie die neue Service-Klasse `CartJsonService`. Legen Sie hier die Methode `exportCart()` an. 
 Orientieren Sie sich beim Methodenkopf an der Umsetzung in `CartCsvService`
+* Implementieren Sie die Methode `exportCart()`. Orientieren Sie sich eng am obigen Code Snippet.
+* Fügen Sie dem Controller eine `CartJsonService`-Instanz als Attribut hinzu, so wie Sie es auch schon für `CartCsvService` gemacht haben.
+* Passen Sie die Methode `handleExport()` im Controller an:
+  * Ergänzen Sie einen zweiten `ExtensionFilter` für JSON-Dateien und fügen Sie ihn dem `FileChooser` hinzu.
+  * Ergänzen Sie an der richtigen Stelle eine Prüfung: Wenn der Nutzer eine JSON-Datei ausgewählt hat, soll die JSON-Export-Methode aufgerufen werden, sonst die CSV-Export-Methode.
+Überlegen Sie sich dazu, wie Sie prüfen können, für welchen Dateityp sich der Benutzer entschieden hat.
+* Am Ende dieser Aufgabe kann der Benutzer erfolgreich seinen Warenkorb in eine JSON-Datei exportieren.
+
+### Tipps
+* Die Methode `exportCart()` wird nur 2 Zeilen Code umfassen. Den Methodenkopf können Sie 1 zu 1 aus `CartCsvService` übernehmen.
+* Es gibt mehrere Wege, zu prüfen, für welchen Dateityp der Benutzer sich entschieden hat.
+Ein Weg ist die Methode `fileChooser.getSelectedExtensionFilter()`.
+* Die Prüfung platzieren Sie unmittelbar an der Stelle, an der bisher `cartCsvService.exportCart()` aufgerufen wird, d.h. **im** `try`-Block.
 
 ---
 
 ## Aufgabe 8 - Import mit Jackson
+
+Zum Schluss wird der Import mit Jackson ergänzt. 
+Hierfür muss die Methode `importCart()` im `CartJsonService` implementiert werden und die Methode `handleImport()` im Controller angepasst werden.
+
+Der Import mit Jackson gestaltet sich nur unwesentlich schwieriger als der Export.
+Um aus einer JSON-Datei eine Liste aus Java-Objekten zu generieren, ist eine Jackson-`TypeReference` notwendig: 
+Diese sagt Jackson, in was für ein spezifisches Objekt der JSON-Text umgewandelt werden soll.
+Die Syntax dazu ist etwas speziell:
+
+```java
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+ObjectMapper mapper = new ObjectMapper();
+
+// Erstelle eine Typ-Referenz für eine Liste aus CartEntryData:
+TypeReference<List<CartEntryData>> reference = new TypeReference<List<CartEntryData>>() {};
+
+// Benutze diese Referenz beim Lesen der Datei:
+return mapper.readValue(file, reference);
+```
+
+### Anforderungen
+* Setzen Sie die Methode `importCart()` in `CartJsonService` um. 
+Sie können das Code-Snippet aus der Einleitung dazu komplett übernehmen.
+* Passen Sie die Methode `handleImport()` im Controller an:
+  * Fügen Sie dem bestehenden `ExtensionFilter` ein weiteres Argument `*.json` hinzu, damit dieser eine Filter sowohl CSV- als auch JSON-Objekte anzeigt.
+  * Ergänzen Sie erneut eine Prüfung darauf, welchen Dateityp der Nutzer ausgewählt hat.
+Der Lösungsvorschlag aus der letzten Aufgabe funktioniert hier nicht!
+  * **Optional:** Fangen Sie den Fall ab, dass der Benutzer eine Datei ungültigen Typs bereitstellt.
+In diesem Fall soll eine `IOException` ausgelöst werden.
+* Am Ende dieser Aufgabe kann der Benutzer erfolgreich den Warenkorb aus einer JSON-Datei importieren.
+
+### Tipps
+* Da hier **ein** Filter für **beide** Dateitypen fungiert, können Sie diesmal nicht den ausgewählten Filter überprüfen.
+Prüfen Sie stattdessen einfach die Dateiendung der Datei selbst:
+Mit `file.getName()` bekommen Sie den Namen der Datei als String und können hiermit Überprüfungen anstellen.
+* Um zu überprüfen, ob ein String eine bestimmte Endung hat, hilft Ihnen die String-Methode `.endsWith()`
