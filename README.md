@@ -283,7 +283,7 @@ Die Datei `module-info.java` existiert dann, wenn man das Java Module System ver
 <dependency>
   <groupId>com.fasterxml.jackson.core</groupId>
   <artifactId>jackson-databind</artifactId>
-  <version>2.20.1</version>
+  <version>2.22.4</version>
 </dependency> 
 ```
 * Laden Sie anschließend die Dependencies neu. Hierfür gibt es einen Button, der bei Änderungen an der `pom.xml` oben rechts im Editor erscheint.
