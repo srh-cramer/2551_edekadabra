@@ -204,10 +204,13 @@ Der Einfachheit halber ignorieren wir die meisten dieser potenziellen Fehlerquel
 Am Ende dieser Aufgabe soll es dem Benutzer möglich sein, einen Warenkorb aus einer CSV-Datei zu importieren.
 Der existierende Warenkorb soll dabei komplett **überschrieben** werden, d.h. sie müssen nicht alte Daten mit neuen zusammenführen.
 
-Folgendes Code-Snippet liest eine Datei `file` ein und speichert ihren Inhalt zeilenweise. 
+Folgendes Code-Snippet liest eine Datei `file` ein und speichert ihren Inhalt zeilenweise in einer Liste. 
 Anschließend splittet sie die erste Zeile an den Kommas und speichert die Teile in einem String-Array:
 ```java
+// Speichere Zeilen in einer Liste:
 List<String> lines = Files.readAllLines(file.toPath());
+
+//Splitte die erste Zeile an den Kommas: "A,B,C" wird zu {"A", "B", "C"} 
 String[] headerParts = lines[0].split(",");
 ```
 
@@ -255,11 +258,64 @@ Dazu gehören der Aufbau des FileChooser, das Prüfen auf eine fehlende Datei un
 
 ---
 
-## Aufgabe 6 - Maven-Abhängigkeiten verwalten am Beispiel Jackson
+## Aufgabe 6 - Abhängigkeiten verwalten am Beispiel Jackson
 
+Nachdem der CSV-Import und -Export umgesetzt wurde, soll nun das gleiche für JSON-Dateien möglich sein.
+Da JSON-Dateien deutlich komplexer als CSV-Dateien sind, ist es sinnvoll, hier mit einem Parser zu arbeiten.
+
+Es gibt verschiedene externe Libraries, die das Verarbeiten von JSON-Dateien anbieten. 
+Eine sehr populäre Library dafür heißt **Jackson**.
+
+Da Jackson eine externe Abhängigkeit (engl: **Dependency**) darstellt, muss diese zusätzlich installiert werden.
+Die Verwaltung von Dependencies übernimmt für uns in diesem Projekt der Package Manager **Maven**.
+Jede Dependency wird als Eintrag in der Datei `pom.xml` (POM: Project Object Model) verwaltet.
+Diese Datei enthält Projektinformationen, die Build-Konfiguration und Abhängigkeiten.
+
+Weiterhin gibt es in vielen Java-Anwendungen die Datei `module-info.java`, die unabhängig von Maven Informationen darüber hat, 
+welche Module die Anwendung benötigt und welche Pakete sie anderen Modulen zugänglich macht.
+Auch hier müssen bestimmte Abhängigkeiten aufgeführt werden.
+
+Die Datei `module-info.java` existiert dann, wenn man das Java Module System verwendet, was bei der Nutzung von JavaFX standardmäßig der Fall ist.
+
+### Anforderungen
+* Fügen Sie Jackson als Dependency in der `pom.xml` hinzu:
+```xml
+<dependency>
+  <groupId>com.fasterxml.jackson.core</groupId>
+  <artifactId>jackson-databind</artifactId>
+  <version>2.20.1</version>
+</dependency> 
+```
+* Laden Sie anschließend die Dependencies neu. Hierfür gibt es einen Button, der bei Änderungen an der `pom.xml` oben rechts im Editor erscheint.
+* Fügen Sie in der Datei `module-info.java` folgende Einträge hinzu:
+```java
+requires com.fasterxml.jackson.databind;
+opens com.cramer._2551_wiz_mart.model to com.fasterxml.jackson.databind;
+exports com.cramer._2551_wiz_mart.model;
+```
+* Testen Sie, ob sich die Anwendung weiterhin fehlerfrei ausführen lässt
 ---
 
 ## Aufgabe 7 - Export mit Jackson
+
+Wieder wollen wir uns zunächst mit dem Export des Warenkorbs beschäftigen.
+
+Viele Voraussetzungen haben wir dafür im Rahmen des CSV-Exports schon umgesetzt.
+Wir können z.B. weiterhin den Record `CartEntryData` und die die damit verbundenen Methoden `getCartEntryData()` und `importCartEntries()` im `ShopService` nutzen.
+
+Zur klaren Trennung wird der JSON-Export in einer eigenen Service-Klasse `CartJsonService` umgesetzt, die noch nicht existiert.
+Auch diese Klasse wird die Methoden `exportCart()` und `importCart()` bekommen.
+
+In dieser Aufgabe beschäftigen wir uns mit `exportCart()`. Diese Methode wird sehr überschaubar bleiben.
+Folgendes Code-Snippet zeigt, wie man mit Jackson eine 
+
+Anpassungen sind in der Controller-Klasse `handleExport()` nötig, da diese momentan pauschal den CSV-Export anstößt.
+Hier muss eine Prüfung eingebaut werden, zu welchem Dateityp exportiert werden soll, damit anschließend die entsprechende `exportCart()`-Methode ausgefürt wird.
+
+
+### Anforderungen
+* Ergänzen Sie die neue Service-Klasse `CartJsonService`. Legen Sie hier die Methode `exportCart()` an. 
+Orientieren Sie sich beim Methodenkopf an der Umsetzung in `CartCsvService`
 
 ---
 
