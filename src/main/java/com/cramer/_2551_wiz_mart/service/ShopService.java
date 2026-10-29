@@ -64,12 +64,14 @@ public class ShopService {
         return resultList;
     }
 
+    // Der Inhalt unseres Warenkorbs (CartItem)
+    // soll in Warenkorb-Recors (CartEntryData) verwandelt werden
     public List<CartEntryData> getCartEntryDataWithStream(){
         //1. Hole Liste aller CartItems
         List<CartItem> cartItems = cart.getItems();
         //2. Mappe auf jedes Item ein neues CartEntryData-Objekt
-        return cartItems.stream().map(item
-                -> new CartEntryData(item.getProduct().getId(),
+        return cartItems.stream()
+                .map(item -> new CartEntryData(item.getProduct().getId(),
                 item.getQuantity(),
                 item.getProduct().getName(),
                 item.getProduct().getPrice()))

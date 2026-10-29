@@ -1,13 +1,17 @@
 package com.cramer._2551_wiz_mart.controller;
 
 import com.cramer._2551_wiz_mart.model.*;
+import com.cramer._2551_wiz_mart.service.CartCsvService;
 import com.cramer._2551_wiz_mart.service.ShopService;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.scene.control.*;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.VBox;
+import javafx.stage.FileChooser;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -37,11 +41,14 @@ public class ShopController {
     private ComboBox<SortOption> sortComboBox;
 
     private ShopService shopService;
+    private CartCsvService cartCsvService;
 
     @FXML
     public void initialize() {
         shopService = new ShopService();
         shopService.getCart().addObserver(() -> updateCartView());
+
+        cartCsvService = new CartCsvService();
 
         setupCategories();
         setupSorting();
@@ -233,7 +240,30 @@ public class ShopController {
 
     @FXML
     private void handleExport(){
-        // TODO
+        FileChooser fileChooser = new FileChooser();
+
+        fileChooser.setTitle("Export Cart to ...");
+        fileChooser.setInitialFileName("cartExport.csv");
+
+        FileChooser.ExtensionFilter csvFilter = new FileChooser.ExtensionFilter("CSV Files", "*.csv");
+        fileChooser.getExtensionFilters().addAll(csvFilter);
+
+        File file = fileChooser.showSaveDialog(productPane.getScene().getWindow());
+        // Falls User keine Datei auswählt, endet Methode vorzeitig
+        if (file == null){
+            return;
+        }
+
+        List<CartEntryData> entries = shopService.getCartEntryData();
+
+        // Versuche den Cart zu exportieren ...
+        try {
+            cartCsvService.exportCart(entries, file);
+        // ... und fange Fehler im Zusammenhang mit Dateien ab:
+        } catch (IOException e) {
+            showError("Error", e.getMessage());
+        }
+
         showMessage("Export", "Export Button was clicked");
     }
 
