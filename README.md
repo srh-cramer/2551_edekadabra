@@ -211,7 +211,7 @@ Anschließend splittet sie die erste Zeile an den Kommas und speichert die Teile
 List<String> lines = Files.readAllLines(file.toPath());
 
 //Splitte die erste Zeile an den Kommas: "A,B,C" wird zu {"A", "B", "C"} 
-String[] headerParts = lines[0].split(",");
+String[] headerParts = lines.get(0).split(",");
 ```
 
 ### Anforderungen

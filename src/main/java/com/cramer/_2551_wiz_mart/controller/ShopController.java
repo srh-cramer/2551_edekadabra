@@ -234,8 +234,29 @@ public class ShopController {
 
     @FXML
     private void handleImport(){
-        // TODO
-        showMessage("Import", "Import Button was clicked");
+        FileChooser fileChooser = new FileChooser();
+
+        fileChooser.setTitle("Import Cart from ...");
+
+        FileChooser.ExtensionFilter csvFilter = new FileChooser.ExtensionFilter("CSV Files", "*.csv");
+        fileChooser.getExtensionFilters().addAll(csvFilter);
+
+        File file = fileChooser.showOpenDialog(productPane.getScene().getWindow());
+        // Falls User keine Datei auswählt, endet Methode vorzeitig
+        if (file == null){
+            return;
+        }
+
+        // Versuche den Cart zu importieren ...
+        try {
+            List<CartEntryData> entries = cartCsvService.importCart(file);
+            shopService.clearCart();
+            shopService.importCartEntries(entries);
+            // ... und fange Fehler im Zusammenhang mit Dateien ab:
+        } catch (IOException e) {
+            showError("Error while importing cart: ", e.getMessage());
+        }
+        showMessage("Import successfull", "Cart was imported from: " + file.getName());
     }
 
     @FXML
@@ -261,10 +282,9 @@ public class ShopController {
             cartCsvService.exportCart(entries, file);
         // ... und fange Fehler im Zusammenhang mit Dateien ab:
         } catch (IOException e) {
-            showError("Error", e.getMessage());
+            showError("Error while exporting cart: ", e.getMessage());
         }
-
-        showMessage("Export", "Export Button was clicked");
+        showMessage("Export successfull", "Cart was exported to: " + file.getName());
     }
 
 

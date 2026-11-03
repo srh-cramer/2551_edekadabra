@@ -10,6 +10,7 @@ import com.cramer._2551_wiz_mart.repository.ProductRepository;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public class ShopService {
 
@@ -76,5 +77,16 @@ public class ShopService {
                 item.getProduct().getName(),
                 item.getProduct().getPrice()))
                 .toList();
+    }
+
+    public void importCartEntries(List<CartEntryData> entries){
+        for (CartEntryData entry : entries){
+            Optional<Product> product = products.findById(entry.id());
+            if (product.isPresent()){
+                for (int i=0; i < entry.quantity(); i++){
+                    cart.addProduct(product.get());
+                }
+            }
+        }
     }
 }
