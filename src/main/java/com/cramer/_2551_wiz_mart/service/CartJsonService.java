@@ -10,7 +10,6 @@ import java.util.List;
 public class CartJsonService {
 
     public void exportCart(List<CartEntryData> entries, File file) throws IOException {
-
         ObjectMapper mapper = new ObjectMapper();
         mapper.writerWithDefaultPrettyPrinter().writeValue(file, entries);
     }

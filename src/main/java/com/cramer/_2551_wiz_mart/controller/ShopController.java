@@ -2,6 +2,7 @@ package com.cramer._2551_wiz_mart.controller;
 
 import com.cramer._2551_wiz_mart.model.*;
 import com.cramer._2551_wiz_mart.service.CartCsvService;
+import com.cramer._2551_wiz_mart.service.CartJsonService;
 import com.cramer._2551_wiz_mart.service.ShopService;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
@@ -42,6 +43,7 @@ public class ShopController {
 
     private ShopService shopService;
     private CartCsvService cartCsvService;
+    private CartJsonService cartJsonService;
 
     @FXML
     public void initialize() {
@@ -49,6 +51,7 @@ public class ShopController {
         shopService.getCart().addObserver(() -> updateCartView());
 
         cartCsvService = new CartCsvService();
+        cartJsonService = new CartJsonService();
 
         setupCategories();
         setupSorting();
@@ -267,7 +270,8 @@ public class ShopController {
         fileChooser.setInitialFileName("cartExport.csv");
 
         FileChooser.ExtensionFilter csvFilter = new FileChooser.ExtensionFilter("CSV Files", "*.csv");
-        fileChooser.getExtensionFilters().addAll(csvFilter);
+        FileChooser.ExtensionFilter jsonFilter = new FileChooser.ExtensionFilter("JSON Files", "*.json");
+        fileChooser.getExtensionFilters().addAll(csvFilter, jsonFilter);
 
         File file = fileChooser.showSaveDialog(productPane.getScene().getWindow());
         // Falls User keine Datei auswählt, endet Methode vorzeitig
@@ -279,7 +283,11 @@ public class ShopController {
 
         // Versuche den Cart zu exportieren ...
         try {
-            cartCsvService.exportCart(entries, file);
+            if (fileChooser.getSelectedExtensionFilter() == jsonFilter){
+                cartJsonService.exportCart(entries, file);
+            } else {
+                cartCsvService.exportCart(entries, file);
+            }
         // ... und fange Fehler im Zusammenhang mit Dateien ab:
         } catch (IOException e) {
             showError("Error while exporting cart: ", e.getMessage());
